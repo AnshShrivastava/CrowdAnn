@@ -1,6 +1,6 @@
 from django.shortcuts import render, HttpResponse
 from django.contrib.auth.models import User
-from rest_framework import status, viewsets, generics, permissions
+from rest_framework import status, views, generics, permissions
 from oauth2_provider.contrib.rest_framework import TokenHasReadWriteScope, TokenHasScope
 from django.contrib.auth.models import User, Group
 from rest_framework.decorators import action
@@ -53,39 +53,40 @@ def get_image(request):
     return JsonResponse(serializer.data[id], safe=False)
          
         
-class AnnotationViewset(viewsets.ViewSet):
+class AnnotationView(views.APIView):
+    model = Image, Annotation
+    serializer = ImageSerializer, AnnotationSerializer
     
-    def create(self, request):
-        print(request.body)
-        # post_data = json.loads(request.body.decode("utf-8"))
-        post_data = request.data
-        print(post_data)
-        if post_data == '':
-            print("No Data Provided")
-        result = {}
-        if request.method == 'POST':
-            try:
-                new_annotation = Annotation()
-                new_annotation.image_id = post_data['image_id']
-                new_annotation.label = post_data['label']
-                new_annotation.user = abcd
+    def post(self, request, *args, **kwargs):
+        try:
+            # post_data = json.loads(request.body.decode("utf-8"))
+            post_data = request.data
+            # print(post_data)
+            if post_data == '':
+                print("No Data Provided")
+            result = {}
+            if request.method == 'POST':
+                
                 canvas_size = post_data['canvas_size']
                 x_cor = post_data['x_cor']
                 y_cor = post_data['y_cor']
                 newCoordinates_x = []
                 newCoordinates_y = []
-                image = Image.objects.get(pk=post_data['image_id'])
-                for i, j in x_cor, y_cor:
-                    x, y = scale_image(image.image_height, image.image_width, canvas_size, i, j)
+                images = Image.objects.get(pk=post_data['image_id'])
+                # print(images.image_id)
+                for i, j in zip(x_cor, y_cor):
+                    x, y = scale_image(images.image_height, images.image_width, canvas_size, i, j)
                     newCoordinates_x.append(x)
                     newCoordinates_y.append(y)
+                new_annotation = Annotation()
+                new_annotation.image_id = images
+                new_annotation.label = post_data['label']
+                new_annotation.user = 'abcd'
+                new_annotation.coordinates_x = newCoordinates_x
+                new_annotation.coordinates_y = newCoordinates_y
                 new_annotation.save()
-                result['status'] = 'success'
+                result['status'] = True
                 return JsonResponse(result, safe=False)
-            except:
-                result['status'] = 'failed'
-                return JsonResponse(result, safe=False)
-        else:
-            return HttpResponse("Not Allowed")
-        
-        
+        except:
+            result['status'] = False
+            return JsonResponse(result, safe=False)
