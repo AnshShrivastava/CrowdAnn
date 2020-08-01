@@ -1,10 +1,7 @@
-
-from django.contrib.gis.db import models
-from django.core.validators import int_list_validator
+from django.db import models
 from django.contrib.postgres.fields import ArrayField
-from django.conf import settings
 import uuid
-# Create your models here.
+
 
 class Image(models.Model):
     image_id = models.UUIDField(primary_key=True, default= uuid.uuid4, editable=False)
@@ -26,7 +23,3 @@ class Annotation(models.Model):
     coordinates_y = ArrayField(models.IntegerField(), null = True)
     def __str__(self):
         return self.label
-    
-
-
-
